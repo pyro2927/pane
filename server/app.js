@@ -6,6 +6,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const session = require('express-session');
 require('dotenv').config();
 
 const app = express();
@@ -34,6 +35,18 @@ app.use('/api/', limiter);
 // CORS configuration
 app.use(cors());
 
+// Session configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'family-pane-default-secret-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
 // Logging
 if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
@@ -60,11 +73,8 @@ app.use('/admin', express.static(path.join(__dirname, '../client/config')));
 app.use('/assets', express.static(path.join(__dirname, '../client/assets')));
 
 // API Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/calendar', require('./routes/api/calendar'));
-app.use('/api/photos', require('./routes/api/photos'));
+app.use('/auth', require('./routes/auth'));
 app.use('/api/chores', require('./routes/api/chores'));
-app.use('/api/config', require('./routes/config'));
 
 // Main display route
 app.get('/', (req, res) => {

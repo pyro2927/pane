@@ -4,6 +4,11 @@ class FamilyPaneApp {
     this.socket = null;
     this.currentView = 'dashboard';
     this.config = {};
+    this.authStatus = {
+      authenticated: false,
+      userInfo: null,
+      googleAvailable: false
+    };
     this.data = {
       calendar: [],
       photos: [],
@@ -21,6 +26,9 @@ class FamilyPaneApp {
       
       // Initialize UI components
       this.initUI();
+      
+      // Check authentication status
+      await this.checkAuthStatus();
       
       // Load initial data
       await this.loadInitialData();
@@ -101,14 +109,11 @@ class FamilyPaneApp {
       });
     }
 
-    // Settings button
-    const settingsButton = document.getElementById('settings-button');
-    if (settingsButton) {
-      settingsButton.addEventListener('click', () => {
-        // Open admin interface in new window/tab
-        window.open('/admin', '_blank');
-      });
-    }
+    // Settings button and panel
+    this.initSettingsPanel();
+    
+    // Auth status indicator
+    this.initAuthStatus();
 
     // Prevent context menu for kiosk mode
     document.addEventListener('contextmenu', (e) => {
@@ -543,6 +548,304 @@ class FamilyPaneApp {
     if (loadingScreen && mainContainer) {
       loadingScreen.style.display = 'none';
       mainContainer.style.display = 'flex';
+    }
+  }
+
+  // Authentication Methods
+  async checkAuthStatus() {
+    try {
+      const response = await fetch('/auth/status');
+      const status = await response.json();
+      
+      this.authStatus = status;
+      this.updateAuthUI();
+      
+      if (status.authenticated) {
+        console.log('User authenticated:', status.userInfo?.email);
+      } else {
+        console.log('User not authenticated');
+      }
+      
+    } catch (error) {
+      console.error('Failed to check auth status:', error);
+      this.authStatus = { authenticated: false, googleAvailable: false };
+      this.updateAuthUI();
+    }
+  }
+
+  initAuthStatus() {
+    const authStatus = document.getElementById('auth-status');
+    if (authStatus) {
+      authStatus.addEventListener('click', () => {
+        if (this.authStatus.authenticated) {
+          // Show user info or settings
+          this.openSettingsPanel();
+        } else {
+          // Start authentication process
+          this.startGoogleAuth();
+        }
+      });
+    }
+  }
+
+  updateAuthUI() {
+    const authIcon = document.getElementById('auth-icon');
+    const authText = document.getElementById('auth-text');
+    const authStatus = document.getElementById('auth-status');
+    
+    if (this.authStatus.authenticated && this.authStatus.userInfo) {
+      if (authIcon) authIcon.textContent = 'verified_user';
+      if (authText) authText.textContent = this.authStatus.userInfo.name || this.authStatus.userInfo.email;
+      if (authStatus) {
+        authStatus.className = 'auth-status authenticated';
+        authStatus.title = `Signed in as ${this.authStatus.userInfo.email}`;
+      }
+    } else if (this.authStatus.googleAvailable) {
+      if (authIcon) authIcon.textContent = 'account_circle';
+      if (authText) authText.textContent = 'Sign In';
+      if (authStatus) {
+        authStatus.className = 'auth-status not-authenticated';
+        authStatus.title = 'Click to sign in with Google';
+      }
+    } else {
+      if (authIcon) authIcon.textContent = 'cloud_off';
+      if (authText) authText.textContent = 'Offline';
+      if (authStatus) {
+        authStatus.className = 'auth-status unavailable';
+        authStatus.title = 'Google services not available';
+      }
+    }
+
+    // Update settings panel content
+    this.updateSettingsAuthSection();
+  }
+
+  async startGoogleAuth() {
+    try {
+      const response = await fetch('/auth/google', {
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      const data = await response.json();
+      
+      if (data.authUrl) {
+        // Open auth in popup
+        const authWindow = window.open(data.authUrl, 'googleAuth', 
+          'width=600,height=600,scrollbars=yes,resizable=yes');
+        
+        // Listen for auth completion
+        const checkAuth = setInterval(async () => {
+          if (authWindow.closed) {
+            clearInterval(checkAuth);
+            // Check if authentication was successful
+            setTimeout(async () => {
+              await this.checkAuthStatus();
+              if (this.authStatus.authenticated) {
+                this.showStatus('Successfully connected to Google!', 'success');
+              }
+            }, 1000);
+          }
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('Failed to start Google auth:', error);
+      this.showError('Failed to start authentication');
+    }
+  }
+
+  // Settings Panel Methods
+  initSettingsPanel() {
+    const settingsButton = document.getElementById('settings-button');
+    const settingsPanel = document.getElementById('settings-panel');
+    const closeSettings = document.getElementById('close-settings');
+    
+    if (settingsButton) {
+      settingsButton.addEventListener('click', () => {
+        this.openSettingsPanel();
+      });
+    }
+    
+    if (closeSettings) {
+      closeSettings.addEventListener('click', () => {
+        this.closeSettingsPanel();
+      });
+    }
+    
+    // Close panel when clicking outside
+    if (settingsPanel) {
+      settingsPanel.addEventListener('click', (e) => {
+        if (e.target === settingsPanel) {
+          this.closeSettingsPanel();
+        }
+      });
+    }
+    
+    // Initialize auth buttons
+    this.initAuthButtons();
+  }
+
+  initAuthButtons() {
+    const connectBtn = document.getElementById('google-connect-btn');
+    const disconnectBtn = document.getElementById('google-disconnect-btn');
+    const testBtn = document.getElementById('google-test-btn');
+    
+    if (connectBtn) {
+      connectBtn.addEventListener('click', () => {
+        this.startGoogleAuth();
+      });
+    }
+    
+    if (disconnectBtn) {
+      disconnectBtn.addEventListener('click', () => {
+        this.disconnectGoogle();
+      });
+    }
+    
+    if (testBtn) {
+      testBtn.addEventListener('click', () => {
+        this.testGoogleAPI();
+      });
+    }
+  }
+
+  openSettingsPanel() {
+    const settingsPanel = document.getElementById('settings-panel');
+    if (settingsPanel) {
+      settingsPanel.style.display = 'flex';
+      // Update auth section content when opening
+      this.updateSettingsAuthSection();
+    }
+  }
+
+  closeSettingsPanel() {
+    const settingsPanel = document.getElementById('settings-panel');
+    if (settingsPanel) {
+      settingsPanel.style.display = 'none';
+    }
+  }
+
+  updateSettingsAuthSection() {
+    const authSection = document.getElementById('auth-status-detail');
+    const connectBtn = document.getElementById('google-connect-btn');
+    const disconnectBtn = document.getElementById('google-disconnect-btn');
+    const testBtn = document.getElementById('google-test-btn');
+    
+    if (this.authStatus.authenticated && this.authStatus.userInfo) {
+      // User is authenticated
+      if (authSection) {
+        authSection.innerHTML = `
+          <div class="user-info">
+            <div class="user-avatar">
+              <img src="${this.authStatus.userInfo.picture || ''}" alt="Profile" onerror="this.style.display='none'">
+              <i class="material-icons" style="${this.authStatus.userInfo.picture ? 'display:none' : ''}">person</i>
+            </div>
+            <div class="user-details">
+              <div class="user-name">${this.escapeHtml(this.authStatus.userInfo.name || 'Unknown User')}</div>
+              <div class="user-email">${this.escapeHtml(this.authStatus.userInfo.email || '')}</div>
+            </div>
+          </div>
+          <p class="status-message success">✅ Connected to Google Calendar and Photos</p>
+        `;
+      }
+      
+      if (connectBtn) connectBtn.style.display = 'none';
+      if (disconnectBtn) disconnectBtn.style.display = 'inline-flex';
+      if (testBtn) testBtn.style.display = 'inline-flex';
+      
+    } else if (this.authStatus.googleAvailable) {
+      // Google available but not authenticated
+      if (authSection) {
+        authSection.innerHTML = '<p>Connect your Google account to access Calendar and Photos</p>';
+      }
+      
+      if (connectBtn) connectBtn.style.display = 'inline-flex';
+      if (disconnectBtn) disconnectBtn.style.display = 'none';
+      if (testBtn) testBtn.style.display = 'none';
+      
+    } else {
+      // Google not available
+      if (authSection) {
+        authSection.innerHTML = `
+          <p class="status-message warning">⚠️ Google integration not configured</p>
+          <p>Please configure Google OAuth credentials in your .env file or credentials.json</p>
+        `;
+      }
+      
+      if (connectBtn) connectBtn.style.display = 'none';
+      if (disconnectBtn) disconnectBtn.style.display = 'none';
+      if (testBtn) testBtn.style.display = 'none';
+    }
+  }
+
+  async disconnectGoogle() {
+    try {
+      const response = await fetch('/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        this.authStatus = { authenticated: false, googleAvailable: this.authStatus.googleAvailable };
+        this.updateAuthUI();
+        this.showStatus('Disconnected from Google', 'success');
+      } else {
+        throw new Error('Logout failed');
+      }
+    } catch (error) {
+      console.error('Failed to disconnect:', error);
+      this.showError('Failed to disconnect from Google');
+    }
+  }
+
+  async testGoogleAPI() {
+    try {
+      const testResults = document.getElementById('auth-test-results');
+      if (testResults) {
+        testResults.style.display = 'block';
+        testResults.innerHTML = '<p>Testing API access...</p>';
+      }
+      
+      const response = await fetch('/auth/google/test');
+      const results = await response.json();
+      
+      if (testResults) {
+        if (response.ok) {
+          testResults.innerHTML = `
+            <div class="test-results success">
+              <h5>✅ API Test Results</h5>
+              <div class="test-item">
+                <strong>Calendar:</strong> ${results.calendar.hasAccess ? `✅ ${results.calendar.calendarsCount} calendars found` : '❌ No access'}
+              </div>
+              <div class="test-item">
+                <strong>Photos:</strong> ${results.photos.hasAccess ? '✅ Access granted' : `❌ ${results.photos.error}`}
+              </div>
+            </div>
+          `;
+        } else {
+          testResults.innerHTML = `
+            <div class="test-results error">
+              <h5>❌ API Test Failed</h5>
+              <p>${results.message || 'Unknown error'}</p>
+            </div>
+          `;
+        }
+      }
+      
+    } catch (error) {
+      console.error('API test failed:', error);
+      const testResults = document.getElementById('auth-test-results');
+      if (testResults) {
+        testResults.style.display = 'block';
+        testResults.innerHTML = `
+          <div class="test-results error">
+            <h5>❌ Test Failed</h5>
+            <p>Failed to test API access: ${error.message}</p>
+          </div>
+        `;
+      }
     }
   }
 }
