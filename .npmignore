@@ -1,0 +1,83 @@
+# Family Pane .npmignore
+# Files to exclude if published to npm registry
+
+# Source control
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.travis.yml
+.circleci/
+appveyor.yml
+.gitlab-ci.yml
+
+# Testing
+tests/
+test/
+spec/
+coverage/
+.nyc_output
+jest.config.js
+.eslintrc*
+.prettierrc*
+*.test.js
+*.spec.js
+
+# Development dependencies and configs
+nodemon.json
+.nodemonignore
+webpack.config.js
+rollup.config.js
+tsconfig.json
+
+# Documentation (except main README)
+docs/
+CHANGELOG.md
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment and config files
+.env*
+config/credentials.json
+config/*.db
+
+# Build artifacts
+build/
+dist/
+lib-cov/
+
+# Logs
+logs/
+*.log
+
+# Runtime
+tmp/
+temp/
+cache/
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Family Pane specific exclusions
+client/display/
+client/config/
+server/
+scripts/
+tests/
+
+# Keep only essential files for npm package
+# Main files to include would be defined in package.json "files" field

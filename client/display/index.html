@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Family Pane</title>
+    
+    <!-- Material Design 3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/material-design-light@1.0.0/dist/material-design-light.min.css" rel="stylesheet">
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/views.css">
+    <link rel="stylesheet" href="css/components.css">
+    
+    <!-- Prevent selection and context menu for kiosk mode -->
+    <style>
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Roboto', sans-serif;
+            background: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface);
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <p>Loading Family Pane...</p>
+    </div>
+
+    <!-- Main Container -->
+    <main id="main-container" class="main-container" style="display: none;">
+        
+        <!-- Top Navigation Bar -->
+        <header class="top-nav">
+            <div class="nav-content">
+                <div class="time-display">
+                    <span id="current-time" class="current-time"></span>
+                    <span id="current-date" class="current-date"></span>
+                </div>
+                
+                <div class="nav-controls">
+                    <button id="view-switcher" class="nav-button" title="Switch View">
+                        <i class="material-icons">dashboard</i>
+                    </button>
+                    <button id="settings-button" class="nav-button" title="Settings">
+                        <i class="material-icons">settings</i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- View Switcher Menu -->
+        <div id="view-menu" class="view-menu" style="display: none;">
+            <div class="view-menu-content">
+                <button class="view-option" data-view="dashboard">
+                    <i class="material-icons">dashboard</i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="view-option" data-view="calendar-photos">
+                    <i class="material-icons">calendar_view_day</i>
+                    <span>Calendar + Photos</span>
+                </button>
+                <button class="view-option" data-view="chores">
+                    <i class="material-icons">task_alt</i>
+                    <span>Chores Board</span>
+                </button>
+                <button class="view-option" data-view="photos">
+                    <i class="material-icons">photo_library</i>
+                    <span>Photo Frame</span>
+                </button>
+                <button class="view-option" data-view="messages">
+                    <i class="material-icons">message</i>
+                    <span>Message Center</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div id="content-container" class="content-container">
+            
+            <!-- Dashboard View -->
+            <div id="dashboard-view" class="view active">
+                <div class="dashboard-grid">
+                    <!-- Weather Widget -->
+                    <div class="widget weather-widget">
+                        <div class="widget-header">
+                            <i class="material-icons">wb_sunny</i>
+                            <h3>Weather</h3>
+                        </div>
+                        <div class="widget-content">
+                            <div class="weather-current">
+                                <span class="temperature">--°</span>
+                                <span class="condition">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Calendar Widget -->
+                    <div class="widget calendar-widget">
+                        <div class="widget-header">
+                            <i class="material-icons">calendar_today</i>
+                            <h3>Today's Events</h3>
+                        </div>
+                        <div class="widget-content" id="calendar-events">
+                            <p class="no-events">No events today</p>
+                        </div>
+                    </div>
+
+                    <!-- Chores Widget -->
+                    <div class="widget chores-widget">
+                        <div class="widget-header">
+                            <i class="material-icons">task_alt</i>
+                            <h3>Today's Chores</h3>
+                        </div>
+                        <div class="widget-content" id="chores-list">
+                            <p class="no-chores">No chores assigned</p>
+                        </div>
+                    </div>
+
+                    <!-- Photo Widget -->
+                    <div class="widget photo-widget">
+                        <div class="photo-display" id="photo-display">
+                            <img id="current-photo" src="" alt="Family Photo" style="display: none;">
+                            <div class="photo-placeholder">
+                                <i class="material-icons">photo</i>
+                                <p>Loading photos...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar + Photos Split View -->
+            <div id="calendar-photos-view" class="view">
+                <div class="split-view">
+                    <div class="split-left">
+                        <div class="section-header">
+                            <i class="material-icons">calendar_today</i>
+                            <h2>Family Calendar</h2>
+                        </div>
+                        <div id="calendar-full" class="calendar-full">
+                            <p>Loading calendar events...</p>
+                        </div>
+                    </div>
+                    <div class="split-right">
+                        <div class="photo-slideshow" id="photo-slideshow">
+                            <img id="slideshow-photo" src="" alt="Family Photo">
+                            <div class="photo-info">
+                                <span id="photo-title"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chores Board View -->
+            <div id="chores-view" class="view">
+                <div class="chores-board">
+                    <div class="section-header">
+                        <i class="material-icons">task_alt</i>
+                        <h2>Family Chores Board</h2>
+                    </div>
+                    <div class="chores-columns" id="chores-board">
+                        <div class="chore-column">
+                            <h3>To Do</h3>
+                            <div class="chore-list" id="todo-chores"></div>
+                        </div>
+                        <div class="chore-column">
+                            <h3>In Progress</h3>
+                            <div class="chore-list" id="progress-chores"></div>
+                        </div>
+                        <div class="chore-column">
+                            <h3>Done</h3>
+                            <div class="chore-list" id="done-chores"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Photo Frame View -->
+            <div id="photos-view" class="view">
+                <div class="fullscreen-photo">
+                    <img id="fullscreen-photo-img" src="" alt="Family Photo">
+                    <div class="photo-overlay">
+                        <div class="photo-details">
+                            <span id="fullscreen-photo-title"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message Center View -->
+            <div id="messages-view" class="view">
+                <div class="message-center">
+                    <div class="section-header">
+                        <i class="material-icons">message</i>
+                        <h2>Family Messages</h2>
+                    </div>
+                    <div class="messages-container" id="messages-container">
+                        <p>No messages yet. Use the admin interface to add family announcements.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Socket.IO Client -->
+    <script src="/socket.io/socket.io.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="js/app.js"></script>
+    <script src="js/views.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/touch.js"></script>
+</body>
+</html>

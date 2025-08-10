@@ -1,0 +1,111 @@
+# Family Pane Git Attributes
+
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Explicitly declare text files you want to always be normalized and converted
+# to native line endings on checkout.
+*.js text eol=lf
+*.json text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.xml text eol=lf
+*.txt text eol=lf
+*.sql text eol=lf
+
+# Declare files that will always have CRLF line endings on checkout.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Declare files that will always have LF line endings on checkout.
+*.sh text eol=lf
+
+# Denote all files that are truly binary and should not be modified.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.mov binary
+*.mp4 binary
+*.mp3 binary
+*.flv binary
+*.fla binary
+*.swf binary
+*.gz binary
+*.zip binary
+*.7z binary
+*.ttf binary
+*.eot binary
+*.woff binary
+*.woff2 binary
+*.pyc binary
+*.pdf binary
+*.db binary
+*.sqlite binary
+*.sqlite3 binary
+
+# Security: Mark credential files as binary to prevent accidental text processing
+*.key binary
+*.pem binary
+*.p12 binary
+*.pfx binary
+*.crt binary
+credentials.json binary
+*secret*.json binary
+*.env binary
+
+# Documentation
+*.md diff=markdown
+
+# JavaScript and JSON
+*.js diff=javascript linguist-language=JavaScript
+*.json linguist-language=JSON
+
+# CSS
+*.css linguist-language=CSS
+
+# HTML
+*.html linguist-language=HTML
+
+# Configuration files
+*.yml linguist-language=YAML
+*.yaml linguist-language=YAML
+
+# Archive files
+*.zip filter=lfs diff=lfs merge=lfs -text
+*.gz filter=lfs diff=lfs merge=lfs -text
+*.tar.gz filter=lfs diff=lfs merge=lfs -text
+
+# Large media files (if any are added to the project)
+*.mp4 filter=lfs diff=lfs merge=lfs -text
+*.mov filter=lfs diff=lfs merge=lfs -text
+*.avi filter=lfs diff=lfs merge=lfs -text
+
+# Database files should not be tracked but if they are, treat as binary
+*.db filter=lfs diff=lfs merge=lfs -text
+*.sqlite filter=lfs diff=lfs merge=lfs -text
+*.sqlite3 filter=lfs diff=lfs merge=lfs -text
+
+# Security: Ensure certain files are never cached or diffed
+config/credentials.json -diff
+config/*secret*.json -diff
+*.key -diff
+*.pem -diff
+.env* -diff
+
+# Treat test files differently
+tests/*.js linguist-language=JavaScript
+*.test.js linguist-language=JavaScript
+*.spec.js linguist-language=JavaScript
+
+# GitHub language detection
+*.js linguist-detectable=true
+*.html linguist-detectable=true
+*.css linguist-detectable=true
+tests/ linguist-documentation=false
+docs/ linguist-documentation=true
+*.md linguist-documentation=true
